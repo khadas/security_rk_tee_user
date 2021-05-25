@@ -9,13 +9,33 @@ $(error invalid output directory (O=$(O)))
 endif
 
 include $(TA_DEV_KIT_DIR)/host_include/conf.mk
+include $(TA_DEV_KIT_DIR)/mk/conf.mk
 
 # Prevent use of LDFLAGS from the environment. For example, yocto exports
 # LDFLAGS that are suitable for the client applications, not for TAs
 LDFLAGS=
 
+ifeq ($(CFG_TA_DYNLINK),y)
+OS_TEST_LIB := os_test_lib
+endif
 TA_DIRS := testapp \
-	   testapp_storage
+	   testapp_storage \
+	   create_fail_test \
+	   crypt \
+	   $(OS_TEST_LIB) \
+	   os_test \
+	   rpc_test \
+	   sims \
+	   miss \
+	   sims_keepalive \
+	   storage \
+	   storage2 \
+	   concurrent \
+	   concurrent_large \
+	   storage_benchmark \
+	   sha_perf \
+	   aes_perf \
+	   socket
 
 ifeq ($(CFG_SECURE_DATA_PATH),y)
 TA_DIRS += sdp_basic

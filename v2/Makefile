@@ -27,7 +27,7 @@ CROSS_COMPILE_TA ?= $(CROSS_COMPILE)
 .PHONY: all
 ifneq ($(wildcard $(TA_DEV_KIT_DIR)/host_include/conf.mk),)
 ifeq "$(BUILD_CA)" "y"
-all: rkdemo ta
+all: rkdemo xtest ta
 else
 all: ta
 endif
@@ -44,6 +44,14 @@ rkdemo:
 				O=$(out-dir)/rkdemo  \
 				$@
 
+.PHONY: xtest
+xtest:
+	$(q)$(MAKE) -C host/xtest CROSS_COMPILE="$(CROSS_COMPILE_HOST)" \
+				--no-builtin-variables \
+				q=$(q) \
+				O=$(out-dir)  \
+				$@
+
 .PHONY: ta
 ta:
 	$(q)$(MAKE) -C ta CROSS_COMPILE="$(CROSS_COMPILE_TA)" \
@@ -54,6 +62,7 @@ ta:
 ifneq ($(wildcard $(TA_DEV_KIT_DIR)/host_include/conf.mk),)
 clean:
 	$(q)$(MAKE) -C host/rkdemo O=$(out-dir) $@
+	$(q)$(MAKE) -C host/xtest O=$(out-dir) $@
 	$(q)$(MAKE) -C ta O=$(out-dir) $@
 	$(q)find ta/ \( -name "*.ta" -o -name "*.dmp" -o -name "*.elf" -o -name "*.map" \) -exec rm -rf {} \;
 
