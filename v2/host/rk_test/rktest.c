@@ -77,6 +77,58 @@ static TEEC_Result invoke_storage(TEEC_Session *session,
 				  operation, error_origin);
 };
 
+static TEEC_Result test_storage_speed(TEEC_Session *session,
+			TEEC_Operation *operation, uint32_t *error_origin,
+			uint32_t storage_type, uint32_t *storage_size, uint32_t times)
+{
+	TEEC_Result res = TEEC_SUCCESS;
+	uint8_t *temref_input = NULL;
+
+	for (uint32_t i = 0; i < times; i++) {
+		temref_input = malloc(storage_size[i]);
+		memset(temref_input, 0xab, storage_size[i]);
+		memset(operation, 0, sizeof(TEEC_Operation));
+
+		//Note: these parameters must correspond to operation.params[],
+		operation->paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INOUT, TEEC_VALUE_INPUT,
+			TEEC_NONE, TEEC_NONE);
+		operation->params[0].tmpref.size = storage_size[i];
+		operation->params[0].tmpref.buffer = (void *)temref_input;
+		operation->params[1].value.a = storage_type;
+
+		//Invoke to TA
+		res = TEEC_InvokeCommand(session, RKTEST_TA_CMD_STORAGE_SPEED,
+					operation, error_origin);
+
+		if (temref_input)
+			free(temref_input);
+
+		if (res != TEEC_SUCCESS) {
+			printf("InvokeCommand ERR! res= 0x%x\n", res);
+			break;
+		}
+	}
+
+	return res;
+};
+
+static TEEC_Result invoke_storage_speed(TEEC_Session *session,
+			TEEC_Operation *operation, uint32_t *error_origin)
+{
+	TEEC_Result res = TEEC_SUCCESS;
+	uint32_t rpmb_storage_size[] = {32, 1024, 4096, 30000};
+	uint32_t ree_storage_size[] = {32, 1024, 4096, 30000, 60000};
+
+	res = test_storage_speed(session, operation, error_origin, TEE_STORAGE_PRIVATE_RPMB,
+		rpmb_storage_size, sizeof(rpmb_storage_size) / sizeof(rpmb_storage_size[0]));
+	if (res != TEEC_SUCCESS)
+		return res;
+
+	res = test_storage_speed(session, operation, error_origin, TEE_STORAGE_PRIVATE_REE,
+		ree_storage_size, sizeof(ree_storage_size) / sizeof(ree_storage_size[0]));
+	return res;
+}
+
 static TEEC_Result invoke_property(TEEC_Session *session,
 				   TEEC_Operation *operation, uint32_t *error_origin)
 {
@@ -181,6 +233,20 @@ static TEEC_Result invoke_otp_write(TEEC_Session *session,
 				  operation, error_origin);
 };
 
+static TEEC_Result invoke_otp_size(TEEC_Session *session,
+				    TEEC_Operation *operation, uint32_t *error_origin)
+{
+	return TEEC_InvokeCommand(session, RKTEST_TA_CMD_OEM_OTP_SIZE,
+				  operation, error_origin);
+};
+
+static TEEC_Result invoke_trng_read(TEEC_Session *session,
+				    TEEC_Operation *operation, uint32_t *error_origin)
+{
+	return TEEC_InvokeCommand(session, RKTEST_TA_CMD_TRNG_READ,
+				  operation, error_origin);
+}
+
 TEEC_Result rk_test(uint32_t invoke_command)
 {
 	TEEC_Result res = TEEC_SUCCESS;
@@ -233,6 +299,9 @@ TEEC_Result rk_test(uint32_t invoke_command)
 	case  STORAGE:
 		res = invoke_storage(&session, &operation, &error_origin);
 		break;
+	case  STORAGE_SPEED:
+		res = invoke_storage_speed(&session, &operation, &error_origin);
+		break;
 	case  PROPERTY:
 		res = invoke_property(&session, &operation, &error_origin);
 		break;
@@ -253,6 +322,11 @@ TEEC_Result rk_test(uint32_t invoke_command)
 		break;
 	case  OTP_WRITE:
 		res = invoke_otp_write(&session, &operation, &error_origin);
+		break;
+	case  OTP_SIZE:
+		res = invoke_otp_size(&session, &operation, &error_origin);
+	case  TRNG_READ:
+		res = invoke_trng_read(&session, &operation, &error_origin);
 		break;
 	default:
 		printf("Doing nothing.\n");

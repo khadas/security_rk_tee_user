@@ -7,14 +7,6 @@
 #include <tee_api_defines.h>
 #include "rktest_handle.h"
 
-
-#define ASSERT_PARAM_TYPES(pt)\
-do {\
-	if ((pt) != param_types)\
-		return TEE_ERROR_BAD_PARAMETERS;\
-} while (0)
-
-
 TEE_Result handle_transfer_data(uint32_t param_types, TEE_Param params[4])
 {
 	TEE_Result res = TEE_SUCCESS;

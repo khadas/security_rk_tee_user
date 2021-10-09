@@ -5,7 +5,6 @@
 #define CFG_ARM64_core 1
 #define CFG_ARM64_ldelf 1
 #define CFG_ARM64_ta_arm64 1
-#define CFG_ARM_GICV3 1
 /* CFG_BOOT_SECONDARY_REQUEST is not set */
 #define CFG_CC_OPT_LEVEL s
 #define CFG_COMPAT_GP10_DES 1
@@ -51,7 +50,10 @@
 #define CFG_CRYPTO_CTS 1
 #define CFG_CRYPTO_DES 1
 #define CFG_CRYPTO_DH 1
+/* CFG_CRYPTO_DRIVER is not set */
 #define CFG_CRYPTO_DRIVER_DEBUG 0
+/* CFG_CRYPTO_DRV_CIPHER is not set */
+/* CFG_CRYPTO_DRV_HASH is not set */
 #define CFG_CRYPTO_DSA 1
 #define CFG_CRYPTO_ECB 1
 #define CFG_CRYPTO_ECC 1
@@ -118,6 +120,8 @@
 #define CFG_RK_ATAGS_MEM_PARAM 1
 /* CFG_RK_CRYPTO is not set */
 #define CFG_RK_CRYPTO_BORINGSSL 1
+/* CFG_RK_CRYPTO_V2 is not set */
+#define CFG_RK_MASK_NATIVE_INTR 1
 #define CFG_RK_OS_SERVICE 1
 #define CFG_RK_OTP 1
 #define CFG_RK_RPMB_NO_DIRF_HASH 1
@@ -125,7 +129,6 @@
 #define CFG_RK_UART 1
 #define CFG_RK_UBOOT_STORE 1
 #define CFG_RK_UBOOT_STORE_OTP 1
-#define CFG_RK_UBOOT_WRITE_TOYBRICK_SEED 1
 #define CFG_RPMB_FS 1
 #define CFG_RPMB_FS_CACHE_ENTRIES 0
 /* CFG_RPMB_FS_DEBUG_DATA is not set */
@@ -191,8 +194,8 @@
 /* CFG_WITH_STMM_SP is not set */
 #define CFG_WITH_USER_TA 1
 #define CFG_WITH_VFP 1
-#define PLATFORM_FLAVOR rk3568
-#define PLATFORM_FLAVOR_rk3568 1
+#define PLATFORM_FLAVOR rk3326
+#define PLATFORM_FLAVOR_rk3326 1
 #define PLATFORM_rockchip 1
 #define _CFG_CORE_LTC_ACIPHER 1
 #define _CFG_CORE_LTC_AES 1
