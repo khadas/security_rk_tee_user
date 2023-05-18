@@ -55,7 +55,11 @@ CFLAGS += -I$(OPTEE_OPENSSL_EXPORT)
 else #OPTEE_OPENSSL_EXPORT
 CFLAGS += -I../openssl/include
 ifeq ($(call cc-bits, $(call cc-arch, $(CC))),32)
+ifeq "$(TOOLCHAIN_UCLIBC)" "y"
+LDFLAGS += ../openssl/uclibc_lib/arm/libcrypto.a -ldl
+else
 LDFLAGS += ../openssl/lib/arm/libcrypto.a -ldl
+endif
 else
 LDFLAGS += ../openssl/lib/aarch64/libcrypto.a -ldl
 endif
