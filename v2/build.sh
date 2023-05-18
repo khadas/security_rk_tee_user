@@ -13,6 +13,7 @@ if [ -d "$TOOLCHAIN_PREBUILTS" ]; then
 	TOOLCHAIN_PATH_AARCH64=$TOOLCHAIN_PREBUILTS/aarch64-rockchip830-linux-uclibcgnu/bin/
 	CROSS_COMPILE32=arm-rockchip830-linux-uclibcgnueabihf-
 	CROSS_COMPILE64=aarch64-rockchip830-linux-uclibcgnu-
+	export TOOLCHAIN_UCLIBC=y
 else
 	TOOLCHAIN_PREBUILTS=$WORK_DIR_TOP/../../../../prebuilts
 	if [ ! -d "$TOOLCHAIN_PREBUILTS" ]; then
