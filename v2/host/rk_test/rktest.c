@@ -374,6 +374,13 @@ static TEEC_Result invoke_socket(TEEC_Session *session,
 	return res;
 }
 
+static TEEC_Result invoke_derive_key(TEEC_Session *session,
+				 TEEC_Operation *operation, uint32_t *error_origin)
+{
+	return TEEC_InvokeCommand(session, RKTEST_TA_CMD_DERIVE_KEY,
+				  operation, error_origin);
+}
+
 TEEC_Result rk_test(uint32_t invoke_command)
 {
 	TEEC_Result res = TEEC_SUCCESS;
@@ -472,6 +479,9 @@ TEEC_Result rk_test(uint32_t invoke_command)
 		break;
 	case  SOCKET:
 		res = invoke_socket(&session, &operation, &error_origin);
+		break;
+	case  DERIVE_KEY:
+		res = invoke_derive_key(&session, &operation, &error_origin);
 		break;
 	default:
 		printf("Doing nothing.\n");
