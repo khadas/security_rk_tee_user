@@ -174,5 +174,28 @@ ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8)))
 endif
 include $(BUILD_EXECUTABLE)
 
+################################################################################
+# Build rk_anti_copy_board                                                     #
+################################################################################
+include $(CLEAR_VARS)
+LOCAL_CFLAGS += -DANDROID_BUILD -DUSER_SPACE
+LOCAL_CFLAGS += -Wall
+LOCAL_LDFLAGS += $(CLIENT_LIB_PATH)/libteec.so
+LOCAL_LDFLAGS += -llog
+
+SRC_FILES_DIR := $(wildcard $(LOCAL_PATH)/host/rk_anti_copy_board/*.c)
+LOCAL_SRC_FILES += $(SRC_FILES_DIR:$(LOCAL_PATH)/%=%)
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/ta/rk_anti_copy_board/include \
+		$(LOCAL_PATH)/host/rk_anti_copy_board \
+		$(LOCAL_PATH)/export-ta_arm32/host_include \
+		$(OPTEE_CLIENT_PATH)/public
+
+LOCAL_SHARED_LIBRARIES := libteec libcrypto
+LOCAL_MODULE := rk_anti_copy_board
+LOCAL_MODULE_TAGS := optional
+LOCAL_VENDOR_MODULE := true
+include $(BUILD_EXECUTABLE)
+
 include $(LOCAL_PATH)/ta/Android.mk
 endif
