@@ -1,5 +1,5 @@
 # auto-generated TEE configuration file
-# TEE version 3.13.0-599-gb9dd130f6
+# TEE version 3.13.0-760-g540ade275
 ARCH=arm
 PLATFORM=rockchip
 PLATFORM_FLAVOR=rk3326

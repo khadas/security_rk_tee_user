@@ -1,5 +1,5 @@
 # auto-generated TEE configuration file
-# TEE version 3.13.0-599-gb9dd130f6
+# TEE version 3.13.0-760-g540ade275
 set(CFG_AES_GCM_TABLE_BASED y)
 set(CFG_ARM32_ta_arm32 y)
 set(CFG_ARM64_core y)
