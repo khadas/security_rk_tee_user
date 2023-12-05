@@ -46,6 +46,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := xtest
 LOCAL_VENDOR_MODULE := true
 LOCAL_SHARED_LIBRARIES := libteec
+CFG_PKCS11_TA := y
 
 TA_DIR ?= /vendor/lib/optee_armtz
 
