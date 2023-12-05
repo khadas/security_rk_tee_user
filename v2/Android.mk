@@ -150,6 +150,37 @@ endif
 LOCAL_ADDITIONAL_DEPENDENCIES += $(OPTEE_BIN)
 
 include $(BUILD_EXECUTABLE)
+
+################################################################################
+# Build tee-supplicant test plugin                                             #
+################################################################################
+include $(CLEAR_VARS)
+
+PLUGIN_UUID = f07bfc66-958c-4a15-99c0-260e4e7375dd
+
+PLUGIN                  = $(PLUGIN_UUID).plugin
+PLUGIN_INCLUDES_DIR     = $(LOCAL_PATH)/host/supp_plugin/include
+
+LOCAL_MODULE := $(PLUGIN)
+LOCAL_MODULE_RELATIVE_PATH := tee-supplicant/plugins
+LOCAL_VENDOR_MODULE := true
+# below is needed to locate optee_client exported headers
+LOCAL_SHARED_LIBRARIES := libteec
+
+LOCAL_SRC_FILES += host/supp_plugin/test_supp_plugin.c
+LOCAL_C_INCLUDES += $(PLUGIN_INCLUDES_DIR) $(OPTEE_CLIENT_PATH)/public
+LOCAL_CFLAGS += -Wno-unused-parameter
+
+$(info $$LOCAL_SRC_FILES = ${LOCAL_SRC_FILES})
+
+LOCAL_MODULE_TAGS := optional
+
+# Build the 32-bit and 64-bit versions.
+LOCAL_MULTILIB := both
+LOCAL_MODULE_TARGET_ARCH := arm arm64
+
+include $(BUILD_SHARED_LIBRARY)
+
 ################################################################################
 # Build rktest                                                                 #
 ################################################################################
