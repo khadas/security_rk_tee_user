@@ -27,7 +27,7 @@ CROSS_COMPILE_TA ?= $(CROSS_COMPILE)
 .PHONY: all
 ifneq ($(wildcard $(TA_DEV_KIT_DIR)/host_include/conf.mk),)
 ifeq "$(BUILD_CA)" "y"
-all: rk_test xtest ta extra_app rk_anti_copy_board
+all: rk_test xtest ta extra_app rk_anti_copy_board test_plugin
 else
 all: ta
 endif
@@ -60,6 +60,11 @@ xtest:
 				q=$(q) \
 				O=$(out-dir)  \
 				$@
+
+.PHONY: test_plugin
+test_plugin:
+	$(q)$(MAKE) -C host/supp_plugin CROSS_COMPILE="$(CROSS_COMPILE_HOST)" \
+			     O=$(out-dir)
 
 .PHONY: rk_anti_copy_board
 rk_anti_copy_board:
