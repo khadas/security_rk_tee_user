@@ -69,14 +69,14 @@ def main():
 	f = open(args.inf, 'rb')
 	img = f.read()
 	temp = img[0:4]
-	ta_magic = temp.find('\x48\x53\x54\x4F')
+	ta_magic = temp.find(b'\x48\x53\x54\x4F')
 	if ta_magic == -1:
 		print("not find ta magic! input file is not a TA!")
 		sys.exit(0)
 	temp = img[4:8]
-	ta_img_type0 = temp.find('\x00\x00\x00\x00')
-	ta_img_type1 = temp.find('\x01\x00\x00\x00')
-	ta_img_type2 = temp.find('\x02\x00\x00\x00')
+	ta_img_type0 = temp.find(b'\x00\x00\x00\x00')
+	ta_img_type1 = temp.find(b'\x01\x00\x00\x00')
+	ta_img_type2 = temp.find(b'\x02\x00\x00\x00')
 	f.close()
 
 	if ta_img_type0 != -1:
@@ -108,8 +108,8 @@ def main():
 		sys.exit(0)
 	if ta_img_type1 != -1:
 		temp = img[12:16]
-		ta_algo_pkcs1_v1_5 = temp.find('\x30\x48\x00\x70')
-		ta_algo_pkcs1_pss = temp.find('\x30\x49\x41\x70')
+		ta_algo_pkcs1_v1_5 = temp.find(b'\x30\x48\x00\x70')
+		ta_algo_pkcs1_pss = temp.find(b'\x30\x49\x41\x70')
 		if ta_algo_pkcs1_v1_5 != -1:
 			signer = pkcs1_15.new(key)
 			algo = 0x70004830
