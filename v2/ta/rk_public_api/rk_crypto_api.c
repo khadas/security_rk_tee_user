@@ -1513,6 +1513,7 @@ TEE_Result rk_rsa_begin(crypto_ctx_t *ctx, rsa_key_t *key, uint32_t algo,
 	TEE_ObjectHandle obj = NULL;
 	TEE_Attribute attr[3];
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!key || !ctx)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -1523,6 +1524,13 @@ TEE_Result rk_rsa_begin(crypto_ctx_t *ctx, rsa_key_t *key, uint32_t algo,
 
 	if (TEE_ALG_GET_MAIN_ALG(algo) != TEE_MAIN_ALGO_RSA)
 		return TEE_ERROR_BAD_PARAMETERS;
+
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_ENCRYPT && mode != TEE_MODE_VERIFY)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
 
 #if CRYPTO_DEBUG
 	IMSG("key->n is 0x%x; key->e is 0x%x; key->d is 0x%x",
@@ -1536,8 +1544,9 @@ TEE_Result rk_rsa_begin(crypto_ctx_t *ctx, rsa_key_t *key, uint32_t algo,
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_RSA_MODULUS, key->n, key->key_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_RSA_PUBLIC_EXPONENT, key->e,
 			     key->e_len);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_RSA_PRIVATE_EXPONENT, key->d,
-			     key->d_len);
+	if (priv_mode)
+		TEE_InitRefAttribute(&attr[2], TEE_ATTR_RSA_PRIVATE_EXPONENT, key->d,
+				     key->d_len);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_RSA_KEYPAIR, max_key_size, &obj);
 	if (res != TEE_SUCCESS) {
@@ -1545,7 +1554,7 @@ TEE_Result rk_rsa_begin(crypto_ctx_t *ctx, rsa_key_t *key, uint32_t algo,
 		return res;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 3);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 3 : 2);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
@@ -1677,12 +1686,20 @@ TEE_Result rk_rsa_crypto(uint8_t *in, uint8_t *out, uint32_t len,
 	TEE_Attribute attr[3];
 	uint32_t out_size = 0;
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!in || !out || !key || !len)
 		return TEE_ERROR_BAD_PARAMETERS;
 
 	if (mode != TEE_MODE_ENCRYPT && mode != TEE_MODE_DECRYPT)
 		return TEE_ERROR_BAD_PARAMETERS;
+
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_ENCRYPT)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
 
 	if (TEE_ALG_GET_MAIN_ALG(algo) != TEE_MAIN_ALGO_RSA)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -1697,8 +1714,9 @@ TEE_Result rk_rsa_crypto(uint8_t *in, uint8_t *out, uint32_t len,
 
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_RSA_MODULUS, key->n, key->key_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_RSA_PUBLIC_EXPONENT, key->e, 3);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_RSA_PRIVATE_EXPONENT, key->d,
-			     key->d_len);
+	if (priv_mode)
+		TEE_InitRefAttribute(&attr[2], TEE_ATTR_RSA_PRIVATE_EXPONENT, key->d,
+				     key->d_len);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_RSA_KEYPAIR, max_key_size, &obj);
 	if (res != TEE_SUCCESS) {
@@ -1706,7 +1724,7 @@ TEE_Result rk_rsa_crypto(uint8_t *in, uint8_t *out, uint32_t len,
 		goto exit;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 3);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 3 : 2);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
@@ -1760,12 +1778,20 @@ TEE_Result rk_rsa_sign(uint8_t *digest, uint8_t *signature, uint32_t digest_len,
 	TEE_Attribute attr[4];
 	uint32_t out_size = 0;
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!digest || !signature || !signature_len || !key)
 		return TEE_ERROR_BAD_PARAMETERS;
 
 	if (mode != TEE_MODE_SIGN && mode != TEE_MODE_VERIFY)
 		return TEE_ERROR_BAD_PARAMETERS;
+
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_VERIFY)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
 
 	if (TEE_ALG_GET_MAIN_ALG(algo) != TEE_MAIN_ALGO_RSA)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -1781,8 +1807,9 @@ TEE_Result rk_rsa_sign(uint8_t *digest, uint8_t *signature, uint32_t digest_len,
 
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_RSA_MODULUS, key->n, key->key_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_RSA_PUBLIC_EXPONENT, key->e, 3);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_RSA_PRIVATE_EXPONENT, key->d,
-			     key->d_len);
+	if (priv_mode)
+		TEE_InitRefAttribute(&attr[2], TEE_ATTR_RSA_PRIVATE_EXPONENT, key->d,
+				     key->d_len);
 	TEE_InitValueAttribute(&attr[3], TEE_ATTR_RSA_PSS_SALT_LENGTH, salt_len, 0);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_RSA_KEYPAIR, max_key_size, &obj);
@@ -1791,7 +1818,7 @@ TEE_Result rk_rsa_sign(uint8_t *digest, uint8_t *signature, uint32_t digest_len,
 		goto exit;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 3);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 3 : 2);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
@@ -1846,6 +1873,7 @@ TEE_Result rk_ecdsa_sign(uint8_t *digest, uint8_t *signature,
 	TEE_Attribute attr[4];
 	uint32_t out_size = 0;
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!digest || !signature || !signature_len || !key)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -1855,6 +1883,13 @@ TEE_Result rk_ecdsa_sign(uint8_t *digest, uint8_t *signature,
 
 	if (TEE_ALG_GET_MAIN_ALG(algo) != TEE_MAIN_ALGO_ECDSA)
 		return TEE_ERROR_BAD_PARAMETERS;
+
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_VERIFY)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
 
 #if CRYPTO_DEBUG
 	IMSG("digest is 0x%x; signature is 0x%x; digest_len is %d; signature_len is %d",
@@ -1871,8 +1906,9 @@ TEE_Result rk_ecdsa_sign(uint8_t *digest, uint8_t *signature,
 
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_ECC_PUBLIC_VALUE_X, key->x, key->x_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_ECC_PUBLIC_VALUE_Y, key->y, key->y_len);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
-	TEE_InitValueAttribute(&attr[3], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	TEE_InitValueAttribute(&attr[2], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	if(priv_mode)
+		TEE_InitRefAttribute(&attr[3], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_ECDSA_KEYPAIR, max_key_size, &obj);
 	if (res != TEE_SUCCESS) {
@@ -1880,7 +1916,7 @@ TEE_Result rk_ecdsa_sign(uint8_t *digest, uint8_t *signature,
 		return res;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 4);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 4 : 3);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
@@ -1935,6 +1971,7 @@ TEE_Result rk_sm2_pke(uint8_t *in, uint32_t in_len, uint8_t *out,
 	TEE_Attribute attr[4];
 	uint32_t out_size = 0;
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!in || !out || !out_len || !key)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -1963,13 +2000,21 @@ TEE_Result rk_sm2_pke(uint8_t *in, uint32_t in_len, uint8_t *out,
 	if (mode != TEE_MODE_ENCRYPT && mode != TEE_MODE_DECRYPT)
 		return TEE_ERROR_BAD_PARAMETERS;
 
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_ENCRYPT)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
+
 	out_size = *out_len;
 	max_key_size = key->key_len;
 
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_ECC_PUBLIC_VALUE_X, key->x, key->x_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_ECC_PUBLIC_VALUE_Y, key->y, key->y_len);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
-	TEE_InitValueAttribute(&attr[3], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	TEE_InitValueAttribute(&attr[2], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	if (priv_mode)
+		TEE_InitRefAttribute(&attr[3], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_SM2_PKE_KEYPAIR, max_key_size, &obj);
 	if (res != TEE_SUCCESS) {
@@ -1977,7 +2022,7 @@ TEE_Result rk_sm2_pke(uint8_t *in, uint32_t in_len, uint8_t *out,
 		return res;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 4);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 4 : 3);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
@@ -2030,6 +2075,7 @@ TEE_Result rk_sm2_dsa_sm3(uint8_t *digest, uint32_t digest_len,
 	TEE_Attribute attr[4];
 	uint32_t sign_len = 0;
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!digest || digest_len != SM3_HASH_SIZE || !signature || !signature_len
 	    || !key)
@@ -2059,13 +2105,21 @@ TEE_Result rk_sm2_dsa_sm3(uint8_t *digest, uint32_t digest_len,
 	if (mode != TEE_MODE_SIGN && mode != TEE_MODE_VERIFY)
 		return TEE_ERROR_BAD_PARAMETERS;
 
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_VERIFY)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
+
 	sign_len = *signature_len;
 	max_key_size = key->key_len;
 
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_ECC_PUBLIC_VALUE_X, key->x, key->x_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_ECC_PUBLIC_VALUE_Y, key->y, key->y_len);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
-	TEE_InitValueAttribute(&attr[3], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	TEE_InitValueAttribute(&attr[2], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	if (priv_mode)
+		TEE_InitRefAttribute(&attr[3], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_SM2_DSA_KEYPAIR, max_key_size, &obj);
 	if (res != TEE_SUCCESS) {
@@ -2073,7 +2127,7 @@ TEE_Result rk_sm2_dsa_sm3(uint8_t *digest, uint32_t digest_len,
 		return res;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 4);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 4 : 3);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
@@ -2310,6 +2364,7 @@ TEE_Result rk_ecdsa_begin(crypto_ctx_t *ctx, ec_key_t *key, uint32_t algo,
 	TEE_ObjectHandle obj = NULL;
 	TEE_Attribute attr[4];
 	uint32_t max_key_size = 0;
+	uint32_t priv_mode = 1;
 
 	if (!key || !ctx)
 		return TEE_ERROR_BAD_PARAMETERS;
@@ -2319,6 +2374,13 @@ TEE_Result rk_ecdsa_begin(crypto_ctx_t *ctx, ec_key_t *key, uint32_t algo,
 
 	if (TEE_ALG_GET_MAIN_ALG(algo) != TEE_MAIN_ALGO_ECDSA)
 		return TEE_ERROR_BAD_PARAMETERS;
+
+	if (key->d == NULL || key->d_len == 0) {
+		if (mode != TEE_MODE_VERIFY)
+			return TEE_ERROR_BAD_PARAMETERS;
+
+		priv_mode = 0;
+	}
 
 #if CRYPTO_DEBUG
 	IMSG("key->d is 0x%x; key->x is 0x%x; key->y is 0x%x",
@@ -2333,8 +2395,9 @@ TEE_Result rk_ecdsa_begin(crypto_ctx_t *ctx, ec_key_t *key, uint32_t algo,
 
 	TEE_InitRefAttribute(&attr[0], TEE_ATTR_ECC_PUBLIC_VALUE_X, key->x, key->x_len);
 	TEE_InitRefAttribute(&attr[1], TEE_ATTR_ECC_PUBLIC_VALUE_Y, key->y, key->y_len);
-	TEE_InitRefAttribute(&attr[2], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
-	TEE_InitValueAttribute(&attr[3], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	TEE_InitValueAttribute(&attr[2], TEE_ATTR_ECC_CURVE, key->curve, 0);
+	if (priv_mode)
+		TEE_InitRefAttribute(&attr[3], TEE_ATTR_ECC_PRIVATE_VALUE, key->d, key->d_len);
 
 	res = TEE_AllocateTransientObject(TEE_TYPE_ECDSA_KEYPAIR, max_key_size, &obj);
 	if (res != TEE_SUCCESS) {
@@ -2342,7 +2405,7 @@ TEE_Result rk_ecdsa_begin(crypto_ctx_t *ctx, ec_key_t *key, uint32_t algo,
 		goto exit;
 	}
 
-	res = TEE_PopulateTransientObject(obj, attr, 4);
+	res = TEE_PopulateTransientObject(obj, attr, priv_mode ? 4 : 3);
 	if (res != TEE_SUCCESS) {
 		EMSG("TEE_PopulateTransientObject failed with code 0x%x", res);
 		goto exit;
