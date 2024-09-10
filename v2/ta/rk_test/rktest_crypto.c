@@ -227,6 +227,7 @@ TEE_Result handle_crypto_rsa(void)
 		res =  TEE_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
+	key->d_len = 0;
 	res = rk_rsa_begin(ctx, key, algo, mode);
 	if (res) {
 		EMSG("rk_rsa_begin FAILED! return value: 0x%x", res);
@@ -250,6 +251,7 @@ TEE_Result handle_crypto_rsa(void)
 		res =  TEE_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
+	key->d_len = key->key_len;
 	res = rk_rsa_begin(ctx, key, algo, mode);
 	if (res) {
 		EMSG("rk_rsa_begin FAILED! return value: 0x%x", res);
@@ -310,6 +312,7 @@ TEE_Result handle_crypto_rsa(void)
 	rk_set_sign_mode(ctx, SIGN_DIGEST);
 	algo = TEE_ALG_RSASSA_PKCS1_V1_5_SHA256;
 	mode = TEE_MODE_VERIFY;
+	key->d_len = 0;
 	res = rk_rsa_begin(ctx, key, algo, mode);
 	if (res) {
 		EMSG("rk_rsa_begin FAILED! return value: 0x%x", res);
